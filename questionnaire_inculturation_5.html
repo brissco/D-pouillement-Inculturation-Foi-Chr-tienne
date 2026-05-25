@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dépouillement — Inculturation & Foi Chrétienne</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:#1a1814; --ink2:#4a4740; --ink3:#8a8780;
+  --rule:#e0ddd8; --page:#faf9f7; --cream:#f3f1ec;
+  --accent:#5a3e8a; --accent2:#7f5fc0;
+  --teal:#1a7a5e; --amber:#b86a10; --red:#b03030; --green:#2d7a45;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--page);color:var(--ink);min-height:100vh}
+#app{display:flex;min-height:100vh}
+#sidebar{width:220px;min-width:220px;background:var(--ink);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+#sidebar-logo{padding:24px 20px 16px;border-bottom:1px solid #333}
+#sidebar-logo h1{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;line-height:1.4;color:#fff}
+#sidebar-logo p{font-size:10px;color:#888;margin-top:4px}
+#nav{padding:12px 0;flex:1}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;font-size:12px;color:#aaa;border-left:2px solid transparent;transition:all .15s}
+.nav-item:hover{color:#fff;background:#2a2824}
+.nav-item.active{color:#fff;border-left-color:var(--accent2);background:#2a2824}
+.nav-item .icon{font-size:15px;width:18px;text-align:center}
+#sidebar-stats{padding:16px 20px;border-top:1px solid #333;font-size:11px;color:#666}
+#sidebar-stats .stat{display:flex;justify-content:space-between;margin-bottom:6px}
+#sidebar-stats .stat span:last-child{color:#ccc;font-weight:500}
+#progress-bar{height:3px;background:#333;border-radius:2px;margin-top:8px;overflow:hidden}
+#progress-fill{height:100%;background:var(--accent2);border-radius:2px;transition:width .4s ease;width:0%}
+#main{flex:1;overflow-y:auto}
+.view{display:none;padding:32px 36px;max-width:960px}
+.view.active{display:block}
+.view-header{margin-bottom:28px}
+.view-header h2{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.view-header p{font-size:13px;color:var(--ink3)}
+/* SAISIE */
+#saisie-nav{display:flex;align-items:center;gap:12px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--rule);flex-wrap:wrap}
+#saisie-nav button{border:1px solid var(--rule);background:var(--cream);padding:7px 14px;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink2);transition:all .15s}
+#saisie-nav button:hover{border-color:var(--accent2);color:var(--accent)}
+#num-display{font-family:'Playfair Display',serif;font-size:18px;color:var(--accent);font-weight:700;padding:0 8px}
+#num-input{width:60px;padding:6px 10px;border:1px solid var(--rule);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;background:var(--cream);text-align:center}
+#jump-btn{background:var(--accent)!important;color:#fff!important;border-color:var(--accent)!important}
+.q-block{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:20px 24px;margin-bottom:16px}
+.q-label{font-size:11px;font-weight:500;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.q-text{font-size:14px;color:var(--ink);margin-bottom:14px;line-height:1.6}
+.radio-group,.check-group{display:flex;flex-wrap:wrap;gap:8px}
+.radio-opt,.check-opt{display:flex;align-items:center;gap:6px;padding:6px 14px;border:1px solid var(--rule);border-radius:20px;cursor:pointer;transition:all .15s;font-size:13px;color:var(--ink2);user-select:none}
+.check-opt{border-radius:6px}
+.radio-opt:hover{border-color:var(--accent2);color:var(--accent)}
+.check-opt:hover{border-color:var(--teal)}
+.radio-opt.selected{background:var(--accent);border-color:var(--accent);color:#fff}
+.check-opt.checked{background:var(--teal);border-color:var(--teal);color:#fff}
+.radio-opt input,.check-opt input{display:none}
+.text-input{width:100%;padding:10px 14px;border:1px solid var(--rule);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);background:var(--cream);resize:vertical;min-height:60px;transition:border .15s}
+.text-input:focus{outline:none;border-color:var(--accent2);background:#fff}
+.conditional{margin-top:12px}
+.save-row{display:flex;gap:12px;align-items:center;margin-top:20px;padding-top:20px;border-top:1px solid var(--rule);flex-wrap:wrap}
+.btn-save{background:var(--accent);color:#fff;border:none;padding:10px 24px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;transition:background .15s}
+.btn-save:hover{background:var(--accent2)}
+.btn-clear{background:none;border:1px solid var(--rule);color:var(--ink3);padding:10px 16px;border-radius:8px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:13px}
+#save-msg{font-size:12px;color:var(--green);display:none}
+/* TABLEAU */
+#table-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+#search-input{flex:1;min-width:180px;padding:8px 14px;border:1px solid var(--rule);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;background:var(--cream)}
+#search-input:focus{outline:none;border-color:var(--accent2)}
+.tb-btn{padding:8px 16px;border-radius:8px;border:1px solid var(--rule);background:var(--cream);cursor:pointer;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink2);transition:all .15s}
+.tb-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tb-btn.danger{border-color:#e0c0c0;color:var(--red)}
+.tb-btn.danger:hover{background:#fff0f0}
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--rule)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+thead th{background:var(--cream);padding:10px 12px;text-align:left;font-size:11px;font-weight:500;color:var(--ink3);border-bottom:1px solid var(--rule);white-space:nowrap;position:sticky;top:0}
+tbody tr{border-bottom:1px solid #f0ede8;transition:background .1s}
+tbody tr:hover{background:#faf7ff}
+tbody td{padding:8px 12px;color:var(--ink2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+td.open-cell{max-width:200px;font-style:italic;color:var(--ink3);cursor:help}
+td.open-cell:hover{color:var(--ink2);background:#faf7ff}
+.edit-btn,.del-btn{background:none;border:none;cursor:pointer;font-size:14px;padding:2px 4px}
+.badge-yes{color:var(--green);font-weight:500}
+.badge-no{color:var(--red);font-weight:500}
+.badge-ps{color:var(--amber);font-weight:500}
+/* ANALYSE */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:28px}
+.stat-card{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:16px 20px}
+.stat-card .sc-label{font-size:11px;color:var(--ink3);margin-bottom:6px}
+.stat-card .sc-value{font-size:26px;font-family:'Playfair Display',serif;color:var(--accent);font-weight:700}
+.stat-card .sc-sub{font-size:11px;color:var(--ink3);margin-top:2px}
+.chart-section{margin-bottom:28px}
+.chart-section h3{font-family:'Playfair Display',serif;font-size:16px;margin-bottom:14px;color:var(--ink)}
+.chart-card{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:20px 24px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.bar-label{width:140px;color:var(--ink2);flex-shrink:0;text-align:right;font-size:12px}
+.bar-track{flex:1;height:22px;background:var(--cream);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:8px;font-size:11px;font-weight:500;color:#fff;transition:width .6s ease;min-width:0}
+.bar-pct{font-size:12px;color:var(--ink3);width:42px;flex-shrink:0}
+.c-oui{background:var(--teal)} .c-non{background:var(--red)} .c-pf{background:var(--amber)}
+.c-a{background:var(--accent)} .c-b{background:#4a8fc4} .c-c{background:#c44a8f}
+.c-d{background:#8fc44a} .c-e{background:#c4904a}
+.open-answers{margin-bottom:28px}
+.open-answers h3{font-family:'Playfair Display',serif;font-size:16px;margin-bottom:14px}
+.answer-card{background:#fff;border:1px solid var(--rule);border-left:3px solid var(--accent2);border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:8px;font-size:13px;color:var(--ink2);line-height:1.6}
+.answer-num{font-size:11px;color:var(--ink3);margin-bottom:4px}
+/* EXPORT */
+.export-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.export-card{background:#fff;border:1px solid var(--rule);border-radius:12px;padding:24px;cursor:pointer;transition:all .2s}
+.export-card:hover{border-color:var(--accent2);transform:translateY(-2px)}
+.export-card .ec-icon{font-size:28px;margin-bottom:12px}
+.export-card h4{font-size:14px;font-weight:500;margin-bottom:6px}
+.export-card p{font-size:12px;color:var(--ink3);line-height:1.5}
+.empty-state{text-align:center;padding:60px 20px;color:var(--ink3)}
+.empty-state p{font-size:13px}
+</style>
+</head>
+<body>
+<div id="app">
+<aside id="sidebar">
+  <div id="sidebar-logo">
+    <h1>Inculturation &amp; Foi Chrétienne</h1>
+    <p>Dépouillement dynamique</p>
+  </div>
+  <nav id="nav">
+    <div class="nav-item active" data-view="saisie" onclick="showView('saisie',this)"><span class="icon">✏️</span> Saisie</div>
+    <div class="nav-item" data-view="tableau" onclick="showView('tableau',this)"><span class="icon">📋</span> Tableau</div>
+    <div class="nav-item" data-view="analyse" onclick="showView('analyse',this)"><span class="icon">📊</span> Analyse</div>
+    <div class="nav-item" data-view="export" onclick="showView('export',this)"><span class="icon">💾</span> Export</div>
+  </nav>
+  <div id="sidebar-stats">
+    <div class="stat"><span>Saisis</span><span id="st-saisis">0 / —</span></div>
+    <div class="stat"><span>Progression</span><span id="st-pct">0%</span></div>
+    <div id="progress-bar"><div id="progress-fill"></div></div>
+    <div style="margin-top:12px;border-top:1px solid #2a2a2a;padding-top:12px">
+      <div style="font-size:10px;color:#666;margin-bottom:6px">Nombre total de fichiers</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="number" id="total-input" min="1" value="" placeholder="ex: 150"
+          style="width:80px;padding:5px 8px;background:#2a2824;border:1px solid #444;border-radius:5px;color:#ccc;font-size:12px;font-family:inherit">
+        <button onclick="setTotal()" style="padding:5px 10px;background:var(--accent2);border:none;border-radius:5px;color:#fff;font-size:11px;cursor:pointer;font-family:inherit">OK</button>
+      </div>
+      <div id="total-display" style="font-size:10px;color:#555;margin-top:5px"></div>
+    </div>
+  </div>
+</aside>
+
+<main id="main">
+
+<!-- ══ SAISIE ══════════════════════════════════════════════════════════════ -->
+<div class="view active" id="view-saisie">
+  <div class="view-header">
+    <h2>Saisie des questionnaires</h2>
+    <p>Remplissez chaque questionnaire physique ici. Les données sont sauvegardées localement dans votre navigateur.</p>
+  </div>
+
+  <div id="saisie-nav">
+    <button onclick="prevQ()">← Précédent</button>
+    <span id="num-display">#1</span>
+    <button onclick="nextQ()">Suivant →</button>
+    <span style="margin-left:8px;font-size:12px;color:var(--ink3)">Aller au n°</span>
+    <input type="number" id="num-input" min="1" value="1">
+    <button id="jump-btn" onclick="jumpTo()">OK</button>
+  </div>
+
+  <!-- Q1 -->
+  <div class="q-block">
+    <div class="q-label">Question 1</div>
+    <div class="q-text">Selon vous, l'inculturation peut-elle présenter des dangers pour la foi chrétienne ?</div>
+    <div class="radio-group" id="q1-group">
+      <label class="radio-opt" onclick="selR('q1','oui',this)"><input type="radio" name="q1" value="oui"> Oui</label>
+      <label class="radio-opt" onclick="selR('q1','non',this)"><input type="radio" name="q1" value="non"> Non</label>
+      <label class="radio-opt" onclick="selR('q1','ps',this)"><input type="radio" name="q1" value="ps"> Pas sûr</label>
+    </div>
+  </div>
+
+  <!-- Q2 — plusieurs choix -->
+  <div class="q-block">
+    <div class="q-label">Question 2 — Plusieurs choix possibles</div>
+    <div class="q-text">Parmi les risques suivants, lesquels observez-vous ou craignez-vous ?</div>
+    <div class="check-group">
+      <div class="check-opt" id="opt-q2a" onclick="togOpt('q2a')"> Syncrétisme (mélange foi/traditions)</div>
+      <div class="check-opt" id="opt-q2b" onclick="togOpt('q2b')"> Perte de l'identité chrétienne</div>
+      <div class="check-opt" id="opt-q2c" onclick="togOpt('q2c')"> Mauvaise interprétation de la Bible</div>
+      <div class="check-opt" id="opt-q2d" onclick="togOpt('q2d')"> Conflits entre foi et pratiques culturelles</div>
+      <div class="check-opt" id="opt-q2e" style="border-style:dashed;border-color:var(--accent2);color:var(--accent)" onclick="togOpt('q2e')"> ✏️ Autre…</div>
+    </div>
+    <div id="q2e-zone" style="display:none;margin-top:12px">
+      <input type="text" class="text-input" id="q2e" placeholder="Précisez le risque non listé ci-dessus..." style="min-height:38px;resize:none">
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="q-block">
+    <div class="q-label">Question 3</div>
+    <div class="q-text">Avez-vous déjà observé des pratiques culturelles dans votre Église qui semblent contraires à l'Évangile ?</div>
+    <div class="radio-group" id="q3-group">
+      <label class="radio-opt" onclick="selR('q3','oui',this)"><input type="radio" name="q3" value="oui"> Oui</label>
+      <label class="radio-opt" onclick="selR('q3','non',this)"><input type="radio" name="q3" value="non"> Non</label>
+    </div>
+    <div class="conditional"><textarea class="text-input" id="q3t" placeholder="Si oui, lesquelles ?"></textarea></div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="q-block">
+    <div class="q-label">Question 4</div>
+    <div class="q-text">Pensez-vous que certaines formes d'inculturation déforment le message chrétien ?</div>
+    <div class="radio-group" id="q4-group">
+      <label class="radio-opt" onclick="selR('q4','oui',this)"><input type="radio" name="q4" value="oui"> Oui</label>
+      <label class="radio-opt" onclick="selR('q4','non',this)"><input type="radio" name="q4" value="non"> Non</label>
+      <label class="radio-opt" onclick="selR('q4','pf',this)"><input type="radio" name="q4" value="pf"> Parfois</label>
+    </div>
+    <div class="conditional"><textarea class="text-input" id="q4t" placeholder="Expliquez..."></textarea></div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="q-block">
+    <div class="q-label">Question 5</div>
+    <div class="q-text">L'utilisation des langues et symboles culturels locaux peut-elle entraîner des incompréhensions du message biblique ?</div>
+    <div class="radio-group" id="q5-group">
+      <label class="radio-opt" onclick="selR('q5','oui',this)"><input type="radio" name="q5" value="oui"> Oui</label>
+      <label class="radio-opt" onclick="selR('q5','non',this)"><input type="radio" name="q5" value="non"> Non</label>
+      <label class="radio-opt" onclick="selR('q5','pf',this)"><input type="radio" name="q5" value="pf"> Parfois</label>
+    </div>
+    <div class="conditional"><textarea class="text-input" id="q5t" placeholder="Comment ?"></textarea></div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="q-block">
+    <div class="q-label">Question 6</div>
+    <div class="q-text">L'inculturation peut-elle créer des divisions ou tensions au sein de l'Église ?</div>
+    <div class="radio-group" id="q6-group">
+      <label class="radio-opt" onclick="selR('q6','oui',this)"><input type="radio" name="q6" value="oui"> Oui</label>
+      <label class="radio-opt" onclick="selR('q6','non',this)"><input type="radio" name="q6" value="non"> Non</label>
+    </div>
+    <div class="conditional"><textarea class="text-input" id="q6t" placeholder="Si oui, entre quels groupes ?"></textarea></div>
+  </div>
+
+  <!-- Q7 -->
+  <div class="q-block">
+    <div class="q-label">Question 7</div>
+    <div class="q-text">Selon vous, toutes les pratiques culturelles peuvent-elles être intégrées dans la foi chrétienne ?</div>
+    <div class="radio-group" id="q7-group">
+      <label class="radio-opt" onclick="selR('q7','oui',this)"><input type="radio" name="q7" value="oui"> Oui</label>
+      <label class="radio-opt" onclick="selR('q7','non',this)"><input type="radio" name="q7" value="non"> Non</label>
+      <label class="radio-opt" onclick="selR('q7','ad',this)"><input type="radio" name="q7" value="ad"> À discerner</label>
+    </div>
+    <div class="conditional"><textarea class="text-input" id="q7t" placeholder="Pourquoi ?"></textarea></div>
+  </div>
+
+  <!-- Q8 -->
+  <div class="q-block">
+    <div class="q-label">Question 8</div>
+    <div class="q-text">Avez-vous déjà constaté des effets négatifs personnels liés à l'inculturation ?</div>
+    <div class="radio-group" id="q8-group">
+      <label class="radio-opt" onclick="selR('q8','oui',this)"><input type="radio" name="q8" value="oui"> Oui</label>
+      <label class="radio-opt" onclick="selR('q8','non',this)"><input type="radio" name="q8" value="non"> Non</label>
+    </div>
+    <div class="conditional"><textarea class="text-input" id="q8t" placeholder="Si oui, lesquels ?"></textarea></div>
+  </div>
+
+  <!-- Q9 -->
+  <div class="q-block">
+    <div class="q-label">Question 9 — Réponse ouverte</div>
+    <div class="q-text">Quels critères devraient permettre de distinguer une bonne inculturation d'un syncrétisme dangereux ?</div>
+    <textarea class="text-input" id="q9" rows="4" placeholder="Saisir la réponse complète..."></textarea>
+  </div>
+
+  <!-- Q10 -->
+  <div class="q-block">
+    <div class="q-label">Question 10 — Réponse ouverte</div>
+    <div class="q-text">Quelles limites ou dérives doivent absolument être évitées dans la pratique de l'inculturation ?</div>
+    <textarea class="text-input" id="q10" rows="4" placeholder="Saisir la réponse complète..."></textarea>
+  </div>
+
+  <div class="save-row">
+    <button class="btn-save" onclick="saveQ()">💾 Enregistrer ce questionnaire</button>
+    <button class="btn-clear" onclick="clearForm()">Effacer le formulaire</button>
+    <span id="save-msg">✅ Enregistré !</span>
+  </div>
+</div>
+
+<!-- ══ TABLEAU ══════════════════════════════════════════════════════════════ -->
+<div class="view" id="view-tableau">
+  <div class="view-header">
+    <h2>Tableau des données</h2>
+    <p>Consultez, modifiez ou supprimez les questionnaires saisis. Les colonnes Q9 et Q10 affichent un aperçu des réponses ouvertes.</p>
+  </div>
+  <div id="table-toolbar">
+    <input type="text" id="search-input" placeholder="🔍 Rechercher (n°, mot-clé Q9/Q10)…" oninput="renderTable()">
+    <button class="tb-btn" onclick="showView('saisie',document.querySelector('[data-view=saisie]'))">+ Nouveau</button>
+    <button class="tb-btn danger" onclick="clearAllData()">🗑 Tout effacer</button>
+  </div>
+  <div class="table-wrap">
+    <table id="data-table">
+      <thead>
+        <tr>
+          <th>N°</th>
+          <th>Q1</th>
+          <th>Q2a</th><th>Q2b</th><th>Q2c</th><th>Q2d</th><th>Q2-Autre</th>
+          <th>Q3</th><th>Q3 — Lesquelles ?</th>
+          <th>Q4</th><th>Q4 — Explication</th>
+          <th>Q5</th><th>Q5 — Comment ?</th>
+          <th>Q6</th><th>Q6 — Groupes ?</th>
+          <th>Q7</th><th>Q7 — Pourquoi ?</th>
+          <th>Q8</th><th>Q8 — Lesquels ?</th>
+          <th>Q9 — Critères</th>
+          <th>Q10 — Limites</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+  <div id="table-empty" class="empty-state" style="display:none">
+    <p>Aucun questionnaire saisi pour l'instant.</p>
+  </div>
+</div>
+
+<!-- ══ ANALYSE ══════════════════════════════════════════════════════════════ -->
+<div class="view" id="view-analyse">
+  <div class="view-header">
+    <h2>Analyse &amp; Dépouillement</h2>
+    <p>Résultats mis à jour en temps réel à chaque saisie.</p>
+  </div>
+  <div class="stats-grid" id="stats-grid"></div>
+  <div class="chart-section"><h3>Q1 — L'inculturation présente-t-elle des dangers ?</h3><div class="chart-card" id="chart-q1"></div></div>
+  <div class="chart-section"><h3>Q2 — Risques observés ou craints (cases à cocher)</h3><div class="chart-card" id="chart-q2"></div></div>
+  <div class="chart-section"><h3>Q3 — Pratiques contraires à l'Évangile observées ?</h3><div class="chart-card" id="chart-q3"></div></div>
+  <div class="chart-section"><h3>Q4 — Inculturation déforme-t-elle le message chrétien ?</h3><div class="chart-card" id="chart-q4"></div></div>
+  <div class="chart-section"><h3>Q5 — Langues/symboles → incompréhensions ?</h3><div class="chart-card" id="chart-q5"></div></div>
+  <div class="chart-section"><h3>Q6 — Divisions ou tensions dans l'Église ?</h3><div class="chart-card" id="chart-q6"></div></div>
+  <div class="chart-section"><h3>Q7 — Toutes pratiques culturelles intégrables ?</h3><div class="chart-card" id="chart-q7"></div></div>
+  <div class="chart-section"><h3>Q8 — Effets négatifs personnels constatés ?</h3><div class="chart-card" id="chart-q8"></div></div>
+  <div class="open-answers"><h3>Q9 — Critères distinguant bonne inculturation du syncrétisme</h3><div id="answers-q9"></div></div>
+  <div class="open-answers"><h3>Q10 — Limites et dérives à éviter</h3><div id="answers-q10"></div></div>
+</div>
+
+<!-- ══ EXPORT ═══════════════════════════════════════════════════════════════ -->
+<div class="view" id="view-export">
+  <div class="view-header">
+    <h2>Export des données</h2>
+    <p>Téléchargez vos données pour Excel, Word ou un logiciel d'analyse.</p>
+  </div>
+  <div class="export-grid">
+    <div class="export-card" onclick="exportCSV()"><div class="ec-icon">📊</div><h4>Exporter en CSV</h4><p>Ouvrable dans Excel, LibreOffice, SPSS. Idéal pour les analyses statistiques.</p></div>
+    <div class="export-card" onclick="exportJSON()"><div class="ec-icon">📄</div><h4>Exporter en JSON</h4><p>Sauvegarde complète avec tous les textes libres. Utilisez pour reprendre la saisie plus tard.</p></div>
+    <div class="export-card" onclick="exportReport()"><div class="ec-icon">📝</div><h4>Rapport synthèse (TXT)</h4><p>Pourcentages et réponses ouvertes. Prêt à coller dans Word pour votre mémoire.</p></div>
+    <div class="export-card" onclick="importJSON()"><div class="ec-icon">📥</div><h4>Importer un fichier JSON</h4><p>Rechargez des données exportées pour fusionner les saisies de l'équipe.</p></div>
+  </div>
+  <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleImport(event)">
+</div>
+
+</main>
+</div>
+
+<script>
+let data  = JSON.parse(localStorage.getItem('incultu_data') || '{}');
+let total = parseInt(localStorage.getItem('incultu_total') || '0');
+let cur   = 1;
+
+/* ── utilitaires ────────────────────────────────── */
+function save() {
+  localStorage.setItem('incultu_data', JSON.stringify(data));
+  localStorage.setItem('incultu_total', String(total));
+  updateSidebar();
+}
+
+function updateSidebar() {
+  const n   = Object.keys(data).length;
+  const pct = total > 0 ? Math.round(n / total * 100) : 0;
+  document.getElementById('st-saisis').textContent = n + ' / ' + (total || '—');
+  document.getElementById('st-pct').textContent    = pct + '%';
+  document.getElementById('progress-fill').style.width = pct + '%';
+  const numInp = document.getElementById('num-input');
+  if (numInp && total > 0) numInp.max = total;
+  const disp = document.getElementById('total-display');
+  if (disp) disp.textContent = total > 0 ? total + ' questionnaires définis' : '';
+  const ti = document.getElementById('total-input');
+  if (ti && total > 0 && !ti.value) ti.value = total;
+}
+
+function setTotal() {
+  const v = parseInt(document.getElementById('total-input').value);
+  if (!v || v < 1) return;
+  total = v;
+  save();
+}
+
+function showView(name, el) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+  if(name==='tableau') renderTable();
+  if(name==='analyse') renderAnalyse();
+}
+
+/* ── contrôles radio ───────────────────────────── */
+function selR(qname, val, el) {
+  document.getElementById(qname+'-group').querySelectorAll('.radio-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+
+/* toggle option Q2 — div pur, pas de double-fire */
+function togOpt(id) {
+  const el = document.getElementById('opt-'+id);
+  if (!el) return;
+  const on = !el.classList.contains('checked');
+  el.classList.toggle('checked', on);
+  if (id === 'q2e') {
+    const zone = document.getElementById('q2e-zone');
+    zone.style.display = on ? 'block' : 'none';
+    el.style.borderStyle = on ? 'solid' : 'dashed';
+    el.style.background  = on ? 'var(--accent)' : '';
+    el.style.color       = on ? '#fff' : 'var(--accent)';
+    el.style.borderColor = on ? 'var(--accent)' : 'var(--accent2)';
+    if (!on) document.getElementById('q2e').value = '';
+  }
+}
+
+function setChk(id, state) {
+  const el = document.getElementById('opt-'+id);
+  if (!el) return;
+  el.classList.toggle('checked', state);
+  if (id === 'q2e' && state) {
+    document.getElementById('q2e-zone').style.display = 'block';
+    el.style.borderStyle='solid'; el.style.background='var(--accent)';
+    el.style.color='#fff'; el.style.borderColor='var(--accent)';
+  }
+}
+
+function setR(qname, val) {
+  if (!val) return;
+  const grp = document.getElementById(qname+'-group');
+  if (!grp) return;
+  grp.querySelectorAll('.radio-opt').forEach(opt => {
+    const inp = opt.querySelector('input');
+    if (inp && inp.value === val) { opt.classList.add('selected'); inp.checked = true; }
+  });
+}
+
+function getR(qname) {
+  const sel = document.querySelector('#'+qname+'-group .radio-opt.selected input');
+  return sel ? sel.value : null;
+}
+
+function txt(id) { const el=document.getElementById(id); return el ? el.value.trim() : ''; }
+
+/* ── chargement formulaire ─────────────────────── */
+function loadQ(n) {
+  cur = n;
+  document.getElementById('num-display').textContent = '#'+n;
+  document.getElementById('num-input').value = n;
+  clearForm(false);
+  const d = data[n];
+  if (!d) return;
+
+  // Q1
+  setR('q1', d.q1);
+
+  // Q2 checkboxes
+  ['q2a','q2b','q2c','q2d'].forEach(id => { if(d[id]) setChk(id,true); });
+  if (d.q2e) {
+    setChk('q2e', true);
+    document.getElementById('q2e').value = d.q2e;
+  }
+
+  // Q3–Q8
+  ['q3','q4','q5','q6','q7','q8'].forEach(q => {
+    setR(q, d[q]);
+    if (d[q]==='autre') document.getElementById(q+'a-zone').style.display='block';
+    if (d[q+'a']) document.getElementById(q+'a').value = d[q+'a'];
+    if (d[q+'t']) document.getElementById(q+'t').value = d[q+'t'];
+  });
+
+  // Q9 Q10
+  if (d.q9)  document.getElementById('q9').value  = d.q9;
+  if (d.q10) document.getElementById('q10').value = d.q10;
+}
+
+/* ── sauvegarde ────────────────────────────────── */
+function saveQ() {
+  data[cur] = {
+    n: cur,
+    q1: getR('q1'),
+    q2a: document.getElementById('opt-q2a').classList.contains('checked'),
+    q2b: document.getElementById('opt-q2b').classList.contains('checked'),
+    q2c: document.getElementById('opt-q2c').classList.contains('checked'),
+    q2d: document.getElementById('opt-q2d').classList.contains('checked'),
+    q2e: document.getElementById('opt-q2e').classList.contains('checked') ? txt('q2e') : '',
+    q3: getR('q3'), q3t: txt('q3t'),
+    q4: getR('q4'), q4t: txt('q4t'),
+    q5: getR('q5'), q5t: txt('q5t'),
+    q6: getR('q6'), q6t: txt('q6t'),
+    q7: getR('q7'), q7t: txt('q7t'),
+    q8: getR('q8'), q8t: txt('q8t'),
+    q9: txt('q9'), q10: txt('q10'),
+  };
+  save();
+  const msg = document.getElementById('save-msg');
+  msg.style.display='inline';
+  setTimeout(()=>msg.style.display='none', 2000);
+}
+
+/* ── reset formulaire ──────────────────────────── */
+function clearForm(doLoad=true) {
+  ['q1','q3','q4','q5','q6','q7','q8'].forEach(q => {
+    const grp = document.getElementById(q+'-group');
+    if (grp) grp.querySelectorAll('.radio-opt').forEach(o=>o.classList.remove('selected'));
+    const zone = document.getElementById(q+'a-zone');
+    if (zone) zone.style.display='none';
+    const ainp = document.getElementById(q+'a');
+    if (ainp) ainp.value='';
+    const tinp = document.getElementById(q+'t');
+    if (tinp) tinp.value='';
+  });
+  ['q2a','q2b','q2c','q2d'].forEach(id=>{
+    const el=document.getElementById('opt-'+id); if(el) el.classList.remove('checked');
+  });
+  const q2eOpt = document.getElementById('opt-q2e');
+  if (q2eOpt) { q2eOpt.classList.remove('checked'); q2eOpt.style.borderStyle='dashed'; q2eOpt.style.background=''; q2eOpt.style.color='var(--accent)'; q2eOpt.style.borderColor='var(--accent2)'; }
+  document.getElementById('q2e-zone').style.display='none';
+  document.getElementById('q2e').value='';
+  document.getElementById('q9').value='';
+  document.getElementById('q10').value='';
+}
+
+function prevQ() { if(cur>1)   loadQ(cur-1); }
+function nextQ() { if(total < 1 || cur < total) loadQ(cur+1); }
+function jumpTo() { const v=parseInt(document.getElementById('num-input').value); if(v>=1 && (total<1||v<=total)) loadQ(v); }
+
+/* ── TABLEAU ────────────────────────────────────── */
+const LBLS = { oui:'Oui', non:'Non', ps:'Pas sûr', pf:'Parfois', ad:'À disc.' };
+const CLS  = { oui:'badge-yes', non:'badge-no', ps:'badge-ps', pf:'badge-ps', ad:'badge-ps' };
+
+function renderTable() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const rows = Object.values(data).filter(d =>
+    !q || String(d.n).includes(q)
+      || (d.q9  && d.q9.toLowerCase().includes(q))
+      || (d.q10 && d.q10.toLowerCase().includes(q))
+  );
+  const empty = document.getElementById('table-empty');
+  const wrap  = document.querySelector('.table-wrap');
+  empty.style.display = rows.length===0 ? 'block' : 'none';
+  wrap.style.display  = rows.length===0 ? 'none'  : 'block';
+
+  const esc = s => (s||'').replace(/</g,'&lt;');
+  const preview = s => s ? esc(s.length>60 ? s.slice(0,60)+'…' : s) : '<span style="color:#ccc">—</span>';
+
+  document.getElementById('table-body').innerHTML = rows.map(d => {
+    const q1disp = `<span class="${CLS[d.q1]||''}">${LBLS[d.q1]||'—'}</span>`;
+    const qDisp = (q,lbl) => {
+      const v=d[q]; if(!v) return '—';
+      return v==='autre'&&d[q+'a'] ? `<span class="badge-ps" title="${esc(d[q+'a'])}">Autre</span>` : `<span class="${CLS[v]||''}">${LBLS[v]||'—'}</span>`;
+    };
+    return `<tr>
+      <td><strong>${d.n}</strong></td>
+      <td>${q1disp}</td>
+      <td>${d.q2a?'✓':'—'}</td><td>${d.q2b?'✓':'—'}</td><td>${d.q2c?'✓':'—'}</td><td>${d.q2d?'✓':'—'}</td>
+      <td>${d.q2e ? '<span class="badge-ps" title="'+esc(d.q2e)+'">'+esc(d.q2e.slice(0,20))+'…</span>' : '—'}</td>
+      <td>${qDisp('q3')}</td><td class="open-cell" title="${esc(d.q3t)}">${preview(d.q3t)}</td>
+      <td>${qDisp('q4')}</td><td class="open-cell" title="${esc(d.q4t)}">${preview(d.q4t)}</td>
+      <td>${qDisp('q5')}</td><td class="open-cell" title="${esc(d.q5t)}">${preview(d.q5t)}</td>
+      <td>${qDisp('q6')}</td><td class="open-cell" title="${esc(d.q6t)}">${preview(d.q6t)}</td>
+      <td>${qDisp('q7')}</td><td class="open-cell" title="${esc(d.q7t)}">${preview(d.q7t)}</td>
+      <td>${qDisp('q8')}</td><td class="open-cell" title="${esc(d.q8t)}">${preview(d.q8t)}</td>
+      <td class="open-cell" title="${esc(d.q9)}">${preview(d.q9)}</td>
+      <td class="open-cell" title="${esc(d.q10)}">${preview(d.q10)}</td>
+      <td>
+        <button class="edit-btn" onclick="editQ(${d.n})" title="Modifier">✏️</button>
+        <button class="del-btn"  onclick="deleteQ(${d.n})" title="Supprimer">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function editQ(n) { loadQ(n); showView('saisie',document.querySelector('[data-view=saisie]')); }
+function deleteQ(n) { if(confirm(`Supprimer le questionnaire #${n} ?`)){delete data[n];save();renderTable();} }
+function clearAllData() { if(confirm('Supprimer TOUTES les données ? Cette action est irréversible.')){data={};save();renderTable();} }
+
+/* ── ANALYSE ────────────────────────────────────── */
+function renderAnalyse() {
+  const all = Object.values(data), n = all.length;
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="sc-label">Saisis</div><div class="sc-value">${n}</div><div class="sc-sub">sur ${total||'?'}</div></div>
+    <div class="stat-card"><div class="sc-label">Progression</div><div class="sc-value">${total>0?Math.round(n/total*100):'—'}%</div><div class="sc-sub">complétion</div></div>
+    <div class="stat-card"><div class="sc-label">Restant</div><div class="sc-value">${total>0?total-n:'—'}</div><div class="sc-sub">à saisir</div></div>
+    <div class="stat-card"><div class="sc-label">Réponses Q9</div><div class="sc-value">${all.filter(d=>d.q9).length}</div><div class="sc-sub">remplies</div></div>`;
+
+  if (!n) {
+    ['q1','q2','q3','q4','q5','q6','q7','q8'].forEach(q=>{ document.getElementById('chart-'+q).innerHTML='<div class="empty-state"><p>Aucune donnée.</p></div>'; });
+    ['answers-q9','answers-q10'].forEach(id=>{ document.getElementById(id).innerHTML='<div class="empty-state"><p>Aucune donnée.</p></div>'; });
+    return;
+  }
+
+  const bar = (id, total, items) => {
+    document.getElementById(id).innerHTML = items.map(it=>{
+      const pct = total>0 ? Math.round(it.v/total*100) : 0;
+      return `<div class="bar-row">
+        <div class="bar-label">${it.l}</div>
+        <div class="bar-track"><div class="bar-fill ${it.c}" style="width:${pct}%">${it.v>0?it.v:''}</div></div>
+        <div class="bar-pct">${pct}%</div>
+      </div>`;
+    }).join('');
+  };
+
+  bar('chart-q1', n, [
+    {l:'Oui',  v:all.filter(d=>d.q1==='oui').length,   c:'c-oui'},
+    {l:'Non',  v:all.filter(d=>d.q1==='non').length,   c:'c-non'},
+    {l:'Pas sûr', v:all.filter(d=>d.q1==='ps').length, c:'c-pf'},
+  ]);
+  bar('chart-q2', n, [
+    {l:'Syncrétisme',  v:all.filter(d=>d.q2a).length, c:'c-a'},
+    {l:'Perte identité',v:all.filter(d=>d.q2b).length,c:'c-b'},
+    {l:'Mauvaise interp.',v:all.filter(d=>d.q2c).length,c:'c-c'},
+    {l:'Conflits',     v:all.filter(d=>d.q2d).length, c:'c-d'},
+    {l:'Autre',        v:all.filter(d=>d.q2e).length, c:'c-e'},
+  ]);
+  bar('chart-q3', n, [
+    {l:'Oui',  v:all.filter(d=>d.q3==='oui').length,   c:'c-oui'},
+    {l:'Non',  v:all.filter(d=>d.q3==='non').length,   c:'c-non'},
+  ]);
+  bar('chart-q4', n, [
+    {l:'Oui',    v:all.filter(d=>d.q4==='oui').length,   c:'c-oui'},
+    {l:'Non',    v:all.filter(d=>d.q4==='non').length,   c:'c-non'},
+    {l:'Parfois',v:all.filter(d=>d.q4==='pf').length,    c:'c-pf'},
+  ]);
+  bar('chart-q5', n, [
+    {l:'Oui',    v:all.filter(d=>d.q5==='oui').length,   c:'c-oui'},
+    {l:'Non',    v:all.filter(d=>d.q5==='non').length,   c:'c-non'},
+    {l:'Parfois',v:all.filter(d=>d.q5==='pf').length,    c:'c-pf'},
+  ]);
+  bar('chart-q6', n, [
+    {l:'Oui',  v:all.filter(d=>d.q6==='oui').length,   c:'c-oui'},
+    {l:'Non',  v:all.filter(d=>d.q6==='non').length,   c:'c-non'},
+  ]);
+  bar('chart-q7', n, [
+    {l:'Oui',        v:all.filter(d=>d.q7==='oui').length,   c:'c-oui'},
+    {l:'Non',        v:all.filter(d=>d.q7==='non').length,   c:'c-non'},
+    {l:'À discerner',v:all.filter(d=>d.q7==='ad').length,    c:'c-pf'},
+  ]);
+  bar('chart-q8', n, [
+    {l:'Oui',  v:all.filter(d=>d.q8==='oui').length,   c:'c-oui'},
+    {l:'Non',  v:all.filter(d=>d.q8==='non').length,   c:'c-non'},
+  ]);
+
+  const openAnswers = (id, items) => {
+    document.getElementById(id).innerHTML = items.length===0
+      ? '<div class="empty-state"><p>Aucune réponse saisie.</p></div>'
+      : items.map(a=>`<div class="answer-card"><div class="answer-num">Questionnaire #${a.n}</div>${a.t.replace(/</g,'&lt;')}</div>`).join('');
+  };
+  openAnswers('answers-q9',  all.filter(d=>d.q9).map(d=>({n:d.n,t:d.q9})));
+  openAnswers('answers-q10', all.filter(d=>d.q10).map(d=>({n:d.n,t:d.q10})));
+}
+
+/* ── EXPORT ─────────────────────────────────────── */
+function exportCSV() {
+  const all = Object.values(data);
+  if (!all.length) return alert('Aucune donnée à exporter.');
+  const H = ['N°','Q1','Q2a','Q2b','Q2c','Q2d','Q2e_autre',
+             'Q3','Q3_texte','Q4','Q4_texte',
+             'Q5','Q5_texte','Q6','Q6_texte',
+             'Q7','Q7_texte','Q8','Q8_texte','Q9','Q10'];
+  const q = s => '"'+(s||'').replace(/"/g,'""')+'"';
+  const rows = all.map(d=>[
+    d.n, d.q1||'',
+    d.q2a?1:0, d.q2b?1:0, d.q2c?1:0, d.q2d?1:0, q(d.q2e),
+    d.q3||'', q(d.q3t),
+    d.q4||'', q(d.q4t),
+    d.q5||'', q(d.q5t),
+    d.q6||'', q(d.q6t),
+    d.q7||'', q(d.q7t),
+    d.q8||'', q(d.q8t),
+    q(d.q9), q(d.q10),
+  ].join(','));
+  dl('\uFEFF'+[H.join(','),...rows].join('\n'), 'donnees_inculturation.csv','text/csv');
+}
+
+function exportJSON() {
+  if (!Object.keys(data).length) return alert('Aucune donnée à exporter.');
+  dl(JSON.stringify(data,null,2),'donnees_inculturation.json','application/json');
+}
+
+function exportReport() {
+  const all = Object.values(data), n = all.length;
+  if (!n) return alert('Aucune donnée à exporter.');
+  const p = (q,v) => { const c=all.filter(d=>d[q]===v).length; return `${c} (${Math.round(c/n*100)}%)`; };
+  let t = `RAPPORT DE DÉPOUILLEMENT\nQuestionnaire sur l'inculturation et la foi chrétienne\nDate : ${new Date().toLocaleDateString('fr-FR')}\nNombre de questionnaires : ${n}/${total||'?'}\n\n`;
+  t += `Q1 — Dangers ?\nOui:${p('q1','oui')} | Non:${p('q1','non')} | Pas sûr:${p('q1','ps')} | Autre:${p('q1','autre')}\n\n`;
+  t += `Q2 — Risques (choix multiples)\nSyncrétisme:${all.filter(d=>d.q2a).length} | Perte identité:${all.filter(d=>d.q2b).length} | Mauvaise interp.:${all.filter(d=>d.q2c).length} | Conflits:${all.filter(d=>d.q2d).length} | Autre:${all.filter(d=>d.q2e).length}\n\n`;
+  ['q3','q4','q5','q6','q7','q8'].forEach(q=>{
+    t += `${q.toUpperCase()} — Oui:${p(q,'oui')} | Non:${p(q,'non')} | Autre:${p(q,'autre')}\n`;
+  });
+  t += '\nQ9 — CRITÈRES :\n'+all.filter(d=>d.q9).map(d=>`[${d.n}] ${d.q9}`).join('\n');
+  t += '\n\nQ10 — LIMITES :\n'+all.filter(d=>d.q10).map(d=>`[${d.n}] ${d.q10}`).join('\n');
+  dl(t,'rapport_inculturation.txt','text/plain');
+}
+
+function importJSON() { document.getElementById('import-file').click(); }
+function handleImport(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try { const imp=JSON.parse(ev.target.result); data={...data,...imp}; save(); alert(`Import réussi : ${Object.keys(imp).length} questionnaires chargés.`); }
+    catch { alert('Fichier JSON invalide.'); }
+  };
+  r.readAsText(file);
+}
+
+function dl(content, filename, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content],{type}));
+  a.download = filename; a.click();
+}
+
+/* ── INIT ──────────────────────────────────────── */
+updateSidebar();
+loadQ(1);
+// Restaurer total dans le champ
+if (total > 0) {
+  const ti = document.getElementById('total-input');
+  if (ti) ti.value = total;
+}
+</script>
+</body>
+</html>
